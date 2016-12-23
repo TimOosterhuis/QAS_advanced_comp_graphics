@@ -340,3 +340,72 @@ void splitHalfEdges(Mesh* inputMesh, Mesh* subdivMesh, unsigned int numHalfEdges
   // Note that Next, Prev and Poly are not yet assigned at this point.
 
 }
+
+void toLimit(Mesh* inputMesh, Mesh* limitMesh) {
+    //calculates limit points of a mesh, and assigns the resulting mesh to the limitmesh pointer
+    unsigned int numVerts, numHalfEdges, numFaces;
+    qDebug() << "*calculating limit vertex coordinates";
+
+    numVerts = inputMesh->Vertices.size();
+    numHalfEdges = inputMesh->HalfEdges.size();
+    numFaces = inputMesh->Faces.size();
+    //first the limitmesh is set up like a copy of the input mesh with respect to faces and halfedges
+    limitMesh->Vertices.reserve(numVerts);
+    limitMesh->Faces.reserve(numFaces);
+    limitMesh->HalfEdges.reserve(numHalfEdges);
+    for (int i = 0; i < numFaces; i++) {
+        limitMesh->Faces.append(inputMesh->Faces[i]);
+    }
+    for (int i = 0; i < numHalfEdges; i++) {
+        limitMesh->HalfEdges.append(inputMesh->HalfEdges[i]);
+    }
+    //then the vertices are added, and the correct positions are calculated
+    unsigned int valency;
+    //for every vertex
+    for (int i = 0; i < numVerts; i++) {
+        valency = inputMesh->Vertices[i].val;
+        //append it to the limitmesh
+        limitMesh->Vertices.append(inputMesh->Vertices[i]);
+        bool boundary = false;
+        //if it has an outgoing edge which does not have a polygon or which has a twin which does not have a polygon,
+        //apply boundary rules
+        HalfEdge* currentOutEdge = limitMesh->Vertices[i].out;
+        for (int j = 0; j < valency; j++) {
+            if (!currentOutEdge->polygon || !currentOutEdge->twin->polygon) {
+                boundary = true;
+                break;
+            }
+            currentOutEdge = currentOutEdge->twin->next;
+        }
+        QVector3D sum;
+        if (boundary) {
+            //find the previous and next boundary point and calculate new position according to the limit stencil for curves
+            if(!currentOutEdge->polygon) {
+                 sum = 4*limitMesh->Vertices[i].coords + currentOutEdge->target->coords + currentOutEdge->prev->twin->target->coords;
+            } else {
+                 sum = 4*limitMesh->Vertices[i].coords + currentOutEdge->target->coords + currentOutEdge->twin->next->target->coords;
+            }
+            limitMesh->Vertices[i].coords = sum/6;
+        } else {
+            //normal rules
+            //contribution of the original vertex
+            sum = ((float)(valency - 3)/(float)(valency + 5)) * limitMesh->Vertices[i].coords;
+            //calculate the sum of edge and face points in the one ring neighborhood
+            QVector3D sumPt;
+            for (int j = 0; j < valency; j++) {
+                QVector3D edgePt = (limitMesh->Vertices[i].coords + currentOutEdge->target->coords) / 2;
+                QVector3D facePt = limitMesh->Vertices[i].coords;
+                HalfEdge* polygonEdge = currentOutEdge;
+                for (int k = 0; k < (currentOutEdge->polygon->val - 1); k++) {
+                    facePt += polygonEdge->target->coords;
+                    polygonEdge = polygonEdge->next;
+                }
+                sumPt += ((facePt/currentOutEdge->polygon->val) + edgePt);
+
+                currentOutEdge = currentOutEdge->twin->next;
+            }
+            //add contribution of the one ring neighbourhood
+            limitMesh->Vertices[i].coords = sum + (4.0 / (float)(valency * (valency + 5))) * sumPt;
+        }
+    }
+}

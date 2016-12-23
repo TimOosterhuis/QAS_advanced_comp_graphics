@@ -29,6 +29,7 @@ private slots:
   void on_LoadOBJ_clicked();
   void on_toggle_wf_mode_toggled(bool checked);
   void on_toggle_ref_lines_toggled(bool checked);
+  void on_use_qas_toggled(bool checked);
 
 private:
   Ui::MainWindow *ui;
