@@ -1,15 +1,22 @@
 #ifndef MAINVIEWQAS_H
 #define MAINVIEWQAS_H
 
-#endif // MAINVIEWQAS_H
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions_4_1_Core>
+#include <QOpenGLDebugLogger>
+
+#include <QOpenGLShaderProgram>
+
+#include <QMouseEvent>
+#include "mesh.h"
 
 class MainViewQAS : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 
   Q_OBJECT
 
 public:
-  MainView(QWidget *Parent = 0);
-  ~MainView();
+  MainViewQAS(QWidget *Parent = 0);
+  ~MainViewQAS();
 
   bool modelLoaded;
   bool wireframeMode;
@@ -76,4 +83,4 @@ private slots:
 
 };
 
-#endif // MAINVIEW_H
+#endif // MAINVIEWQAS_H

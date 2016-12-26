@@ -11,6 +11,6 @@ QVector3D edgePoint(unsigned short subdivType, HalfEdge* firstEdge);
 
 void splitHalfEdges(Mesh* inputMesh, Mesh* subdivMesh, unsigned int numHalfEdges, unsigned int numVertPts, unsigned int numFacePts);
 
-void to_limit(Mesh* inputMesh, Mesh* limitMesh);
+void toLimit(Mesh* inputMesh, Mesh* limitMesh);
 
 #endif // MESHTOOLS_H

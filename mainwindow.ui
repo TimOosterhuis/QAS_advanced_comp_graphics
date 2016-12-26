@@ -59,88 +59,6 @@ QGroupBox::title {
       <property name="title">
        <string>Options</string>
       </property>
-      <widget class="QSpinBox" name="SubdivSteps">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>390</y>
-         <width>181</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="maximum">
-        <number>8</number>
-       </property>
-      </widget>
-      <widget class="QLabel" name="SubdivLabel">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>360</y>
-         <width>181</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Loop subdivision steps</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="RotateLabel">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>250</y>
-         <width>181</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Rotation around Y-axis</string>
-       </property>
-      </widget>
-      <widget class="QDial" name="RotateDial">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>270</y>
-         <width>50</width>
-         <height>64</height>
-        </rect>
-       </property>
-       <property name="maximum">
-        <number>359</number>
-       </property>
-       <property name="value">
-        <number>0</number>
-       </property>
-       <property name="sliderPosition">
-        <number>0</number>
-       </property>
-       <property name="tracking">
-        <bool>true</bool>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="invertedAppearance">
-        <bool>false</bool>
-       </property>
-       <property name="invertedControls">
-        <bool>false</bool>
-       </property>
-       <property name="wrapping">
-        <bool>true</bool>
-       </property>
-       <property name="notchTarget">
-        <double>12.000000000000000</double>
-       </property>
-       <property name="notchesVisible">
-        <bool>true</bool>
-       </property>
-      </widget>
       <widget class="QPushButton" name="LoadOBJ">
        <property name="geometry">
         <rect>
@@ -224,7 +142,7 @@ QGroupBox::title {
       <widget class="QCheckBox" name="use_qas">
        <property name="geometry">
         <rect>
-         <x>20</x>
+         <x>10</x>
          <y>130</y>
          <width>91</width>
          <height>31</height>
@@ -232,6 +150,79 @@ QGroupBox::title {
        </property>
        <property name="text">
         <string>Use QAS</string>
+       </property>
+      </widget>
+      <widget class="QDial" name="RotateDial_QAS">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>180</y>
+         <width>50</width>
+         <height>64</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>359</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+       <property name="sliderPosition">
+        <number>0</number>
+       </property>
+       <property name="tracking">
+        <bool>true</bool>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="invertedAppearance">
+        <bool>false</bool>
+       </property>
+       <property name="invertedControls">
+        <bool>false</bool>
+       </property>
+       <property name="wrapping">
+        <bool>true</bool>
+       </property>
+       <property name="notchTarget">
+        <double>12.000000000000000</double>
+       </property>
+       <property name="notchesVisible">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="RotateLabel_QAS">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>181</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rotation around Y-axis</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="QAS_options_label">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>110</y>
+         <width>211</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>QAS options</string>
        </property>
       </widget>
      </widget>
@@ -254,8 +245,110 @@ QGroupBox::title {
        </size>
       </property>
       <property name="title">
-       <string>GroupBox</string>
+       <string>Options</string>
       </property>
+      <widget class="QLabel" name="RotateLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>181</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rotation around Y-axis</string>
+       </property>
+      </widget>
+      <widget class="QDial" name="RotateDial">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>180</y>
+         <width>50</width>
+         <height>64</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>359</number>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+       <property name="sliderPosition">
+        <number>0</number>
+       </property>
+       <property name="tracking">
+        <bool>true</bool>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="invertedAppearance">
+        <bool>false</bool>
+       </property>
+       <property name="invertedControls">
+        <bool>false</bool>
+       </property>
+       <property name="wrapping">
+        <bool>true</bool>
+       </property>
+       <property name="notchTarget">
+        <double>12.000000000000000</double>
+       </property>
+       <property name="notchesVisible">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="SubdivLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>110</y>
+         <width>181</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Loop subdivision steps</string>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="SubdivSteps">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>130</y>
+         <width>181</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>8</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="Loop_options_label">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>90</y>
+         <width>181</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Loop subdivision options</string>
+       </property>
+      </widget>
      </widget>
     </item>
     <item>

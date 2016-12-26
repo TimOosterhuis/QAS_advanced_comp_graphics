@@ -24,6 +24,7 @@ public:
 
 private slots:
   void on_RotateDial_valueChanged(int value);
+  void on_RotateDial_QAS_valueChanged(int value);
   void on_SubdivSteps_valueChanged(int value);
   void on_set_ref_line_size_valueChanged(int value);
   void on_LoadOBJ_clicked();

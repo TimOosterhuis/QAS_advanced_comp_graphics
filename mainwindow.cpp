@@ -24,13 +24,21 @@ void MainWindow::loadOBJ() {
 
   ui->MainDisplay->updateMeshBuffers( &Meshes[0] );
   ui->MainDisplay->modelLoaded = true;
-
   ui->MainDisplay->update();
+
+  ui->QASDisplay->updateMeshBuffers( &Meshes[0] );
+  ui->QASDisplay->modelLoaded = true;
+  ui->QASDisplay->update();
 }
 
 void MainWindow::on_RotateDial_valueChanged(int value) {
   ui->MainDisplay->rotAngle = value;
   ui->MainDisplay->updateMatrices();
+}
+
+void MainWindow::on_RotateDial_QAS_valueChanged(int value) {
+  ui->QASDisplay->rotAngle = value;
+  ui->QASDisplay->updateMatrices();
 }
 
 void MainWindow::on_set_ref_line_size_valueChanged(int value) {
@@ -48,17 +56,17 @@ void MainWindow::on_toggle_ref_lines_toggled(bool checked) {
   ui->MainDisplay->update();
 }
 
-//void MainWindow::on_use_qas_toggled(bool checked) {
-//    Mesh subdividedMesh, limitMesh;
-//    if (checked) {
-//        subdivideLoop(&Meshes[0], &subdividedMesh);
-//        toLimit(&subdividedMesh, &limitMesh);
-//        ui->MainDisplay->updateMeshBuffers( &limitMesh);
-//    } else {
-//        ui->MainDisplay->updateMeshBuffers( &Meshes[ui->SubdivSteps->value()]);
-//    }
-//    ui->MainDisplay->update();
-//}
+void MainWindow::on_use_qas_toggled(bool checked) {
+    Mesh subdividedMesh, limitMesh;
+    if (checked) {
+        subdivideLoop(&Meshes[0], &subdividedMesh);
+        toLimit(&subdividedMesh, &limitMesh);
+        ui->QASDisplay->updateMeshBuffers( &limitMesh);
+    } else {
+        ui->QASDisplay->updateMeshBuffers( &Meshes[0]);
+    }
+    ui->QASDisplay->update();
+}
 
 void MainWindow::on_SubdivSteps_valueChanged(int value) {
   unsigned short k;
