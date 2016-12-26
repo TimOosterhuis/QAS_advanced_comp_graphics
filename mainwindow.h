@@ -20,6 +20,7 @@ public:
   ~MainWindow();
 
   QVector<Mesh> Meshes;
+  QVector<Mesh> QAS_Meshes;
   void loadOBJ();
 
 private slots:

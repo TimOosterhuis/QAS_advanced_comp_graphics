@@ -14,6 +14,8 @@ MainWindow::~MainWindow() {
 
   Meshes.clear();
   Meshes.squeeze();
+  QAS_Meshes.clear();
+  QAS_Meshes.squeeze();
 }
 
 void MainWindow::loadOBJ() {
@@ -21,6 +23,9 @@ void MainWindow::loadOBJ() {
   Meshes.clear();
   Meshes.squeeze();
   Meshes.append( Mesh(&newModel) );
+  QAS_Meshes.clear();
+  QAS_Meshes.squeeze();
+
 
   ui->MainDisplay->updateMeshBuffers( &Meshes[0] );
   ui->MainDisplay->modelLoaded = true;
@@ -57,11 +62,13 @@ void MainWindow::on_toggle_ref_lines_toggled(bool checked) {
 }
 
 void MainWindow::on_use_qas_toggled(bool checked) {
-    Mesh subdividedMesh, limitMesh;
+    Mesh subdividedMesh;
+    QAS_Meshes.append(Mesh());
     if (checked) {
         subdivideLoop(&Meshes[0], &subdividedMesh);
-        toLimit(&subdividedMesh, &limitMesh);
-        ui->QASDisplay->updateMeshBuffers( &limitMesh);
+        ui->QASDisplay->updateMeshBuffers( &subdividedMesh);
+        toLimit(&subdividedMesh, &QAS_Meshes.last());
+        ui->QASDisplay->updateMeshBuffers( &QAS_Meshes.last());
     } else {
         ui->QASDisplay->updateMeshBuffers( &Meshes[0]);
     }
