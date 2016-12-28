@@ -43,12 +43,28 @@ void MainViewQAS::createShaderPrograms() {
 
   mainShaderProg->link();
 
+  qasShaderProg = new QOpenGLShaderProgram();
+  qasShaderProg->addShaderFromSourceFile(QOpenGLShader::Vertex, "/shaders/qas/vertshader.glsl");
+  qasShaderProg->addShaderFromSourceFile(QOpenGLShader::Vertex, "/shaders/qas/tessctrlshader.glsl");
+  qasShaderProg->addShaderFromSourceFile(QOpenGLShader::Vertex, "/shaders/qas/tessevalshader.glsl");
+  qasShaderProg->addShaderFromSourceFile(QOpenGLShader::Vertex, "/shaders/qas/fragshader.glsl");
+
+  qasShaderProg->link();
+
+  //qasShaderProg isn't bound anywhere yet
+
   //get uniform locations
-  uniModelViewMatrix = glGetUniformLocation(mainShaderProg->programId(), "modelviewmatrix");
-  uniProjectionMatrix = glGetUniformLocation(mainShaderProg->programId(), "projectionmatrix");
-  uniNormalMatrix = glGetUniformLocation(mainShaderProg->programId(), "normalmatrix");
-  uniShowRefLines = glGetUniformLocation(mainShaderProg->programId(), "show_isophotes");
-  uniRefLineSize = glGetUniformLocation(mainShaderProg->programId(), "isophote_size");
+  uniModelViewMatrix = glGetUniformLocation(qasShaderProg->programId(), "modelviewmatrix");
+  uniProjectionMatrix = glGetUniformLocation(qasShaderProg->programId(), "projectionmatrix");
+  uniNormalMatrix = glGetUniformLocation(qasShaderProg->programId(), "normalmatrix");
+  uniShowRefLines = glGetUniformLocation(qasShaderProg->programId(), "show_isophotes");
+  uniRefLineSize = glGetUniformLocation(qasShaderProg->programId(), "isophote_size");
+
+  uniModelViewMatrixMain = glGetUniformLocation(mainShaderProg->programId(), "modelviewmatrix");
+  uniProjectionMatrixMain = glGetUniformLocation(mainShaderProg->programId(), "projectionmatrix");
+  uniNormalMatrixMain = glGetUniformLocation(mainShaderProg->programId(), "normalmatrix");
+  uniShowRefLinesMain = glGetUniformLocation(mainShaderProg->programId(), "show_isophotes");
+  uniRefLineSizeMain = glGetUniformLocation(mainShaderProg->programId(), "isophote_size");
 }
 
 void MainViewQAS::createBuffers() {

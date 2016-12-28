@@ -2,5 +2,9 @@
     <qresource prefix="/">
         <file>shaders/fragshader.glsl</file>
         <file>shaders/vertshader.glsl</file>
+        <file>shaders/qas/fragshader.glsl</file>
+        <file>shaders/qas/tessctrlshader.glsl</file>
+        <file>shaders/qas/tessevalshader.glsl</file>
+        <file>shaders/qas/vertshader.glsl</file>
     </qresource>
 </RCC>

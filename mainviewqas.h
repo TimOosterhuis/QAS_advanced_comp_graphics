@@ -56,9 +56,12 @@ private:
   GLint uniModelViewMatrix, uniProjectionMatrix, uniNormalMatrix;
   GLint uniShowRefLines, uniRefLineSize;
 
+  GLint uniModelViewMatrixMain, uniProjectionMatrixMain, uniNormalMatrixMain;
+  GLint uniShowRefLinesMain, uniRefLineSizeMain;
+
   // ---
 
-  QOpenGLShaderProgram* mainShaderProg;
+  QOpenGLShaderProgram* mainShaderProg, qasShaderProg;
 
   GLuint meshVAO, meshCoordsBO, meshNormalsBO, meshIndexBO;
   unsigned int meshIBOSize;
