@@ -68,7 +68,7 @@ void MainWindow::on_use_qas_toggled(bool checked) {
         subdivideLoop(&Meshes[0], &subdividedMesh);
         ui->QASDisplay->updateMeshBuffers( &subdividedMesh);
         toLimit(&subdividedMesh, &QAS_Meshes.last());
-        ui->QASDisplay->updateMeshBuffers( &QAS_Meshes.last());
+        ui->QASDisplay->updateMeshBuffersQAS( &Meshes[0], &QAS_Meshes.last());
     } else {
         ui->QASDisplay->updateMeshBuffers( &Meshes[0]);
     }

@@ -127,6 +127,78 @@ void MainViewQAS::updateMeshBuffers(Mesh* currentMesh) {
     }
   }
 
+  glBindBuffer(GL_ARRAY_BUFFER, meshCoordsBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(QVector3D)*vertexCoords.size(), vertexCoords.data(), GL_DYNAMIC_DRAW);
+
+  qDebug() << " → Updated meshCoordsBO";
+
+  glBindBuffer(GL_ARRAY_BUFFER, meshNormalsBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(QVector3D)*vertexNormals.size(), vertexNormals.data(), GL_DYNAMIC_DRAW);
+
+  qDebug() << " → Updated meshNormalsBO";
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshIndexBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*polyIndices.size(), polyIndices.data(), GL_DYNAMIC_DRAW);
+
+  qDebug() << " → Updated meshIndexBO";
+
+  meshIBOSize = polyIndices.size();
+
+  update();
+
+}
+
+void MainViewQAS::updateMeshBuffersQAS(Mesh* currentMesh, Mesh* edgePointMesh) {
+
+  //When using QAS a control hexagon (with normals) is sent to the shaders for each triangle in the original mesh
+  //The edgepoints of this control hexagon can be found in the edgepoint mesh (which has been
+  //subdivided and has had limitpoint calculated), hence the two mesh pointers as parameters
+
+  //nr of vertices and normals come from edgepointMesh, nr of faces comes from currentMesh
+
+  qDebug() << ".. updateBuffers";
+
+  unsigned int k;
+  unsigned short m;
+  HalfEdge* currentEdge;
+  unsigned int subdivEdgeIdx;
+
+  vertexCoords.clear();
+  vertexCoords.reserve(edgePointMesh->Vertices.size());
+
+  for (k=0; k<edgePointMesh->Vertices.size(); k++) {
+    vertexCoords.append(edgePointMesh->Vertices[k].coords);
+  }
+
+  vertexNormals.clear();
+  vertexNormals.reserve(edgePointMesh->Vertices.size());
+
+  for (k=0; k<edgePointMesh->Faces.size(); k++) {
+    edgePointMesh->setFaceNormal(&edgePointMesh->Faces[k]);
+  }
+
+  for (k=0; k<edgePointMesh->Vertices.size(); k++) {
+    vertexNormals.append( edgePointMesh->computeVertexNormal(&edgePointMesh->Vertices[k]) );
+  }
+
+  polyIndices.clear();
+  polyIndices.reserve(edgePointMesh->HalfEdges.size() + currentMesh->Faces.size());
+
+  for (k=0; k<currentMesh->Faces.size(); k++) {
+    currentEdge = currentMesh->Faces[k].side;
+    //the way the halfedges are split when subdividing preserves the order,
+    //for an halfedge at position k in the original mesh the corresponding halfedges in the subdivided mesh can be found
+    //at positions 2*k and 2*k + 1
+    for (m=0; m<3; m++) {
+      subdivEdgeIdx = 2 * currentEdge->index;
+      polyIndices.append(edgePointMesh->HalfEdges[subdivEdgeIdx]->target->index);
+
+      subdivEdgeIdx = 2 * currentEdge->index + 1;
+      polyIndices.append(edgePointMesh->HalfEdges[subdivEdgeIdx]->target->index);
+
+      currentEdge = currentEdge->next;
+    }
+  }
 
   glBindBuffer(GL_ARRAY_BUFFER, meshCoordsBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(QVector3D)*vertexCoords.size(), vertexCoords.data(), GL_DYNAMIC_DRAW);
