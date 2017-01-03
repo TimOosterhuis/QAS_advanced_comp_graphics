@@ -197,6 +197,10 @@ void MainView::updateVertexArrayObjectQAS()
     polyIndicesQAS.reserve(currentMesh->HalfEdges.size() + currentMesh->Faces.size());
     
     // if useQAS, then we need to set control-net indices here in the *correct* order, and set GL_PATCH_VERTICES to 6 (and also in tessctrlshader set vertices = 6)
+    // So idea: let's use the flag we set in Vertex.flag to check if we have an edge-point or not
+    // And then we only need to get a NON-edge-point vertex, and get a triangle with other non-edge points, and catch the edge-points in between
+    // Then put the indices of those vertices in the polyIndicesQAS.
+    // We can either do v0 e0 v1 e1 v2 e2 or v0 v1 v2 e0 e1 e2, whatever is easier for using in the shader
     for (int k=0;k<currentMesh->Faces.size();++k)
     {
         HalfEdge* currentEdge = currentMesh->Faces[k].side;

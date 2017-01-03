@@ -9,11 +9,15 @@ class HalfEdge;
 
 class Vertex {
 public:
+    static const unsigned short FLAG_NONE = 0;
+    static const unsigned short FLAG_SUBDIV = 1;
+    
   QVector3D coords;
   HalfEdge* out;
   unsigned short val;
   unsigned int index;
   unsigned short sharpness;
+  unsigned short flag = FLAG_NONE;
 
   // Inline constructors
   Vertex() {
