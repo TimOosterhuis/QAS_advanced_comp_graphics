@@ -16,8 +16,7 @@ SOURCES += main.cpp\
     mainview.cpp \
     objfile.cpp \
     mesh.cpp \
-    meshtools.cpp \
-    mainviewqas.cpp
+    meshtools.cpp
 
 HEADERS  += mainwindow.h \
     mainview.h \
@@ -25,8 +24,7 @@ HEADERS  += mainwindow.h \
     mesh.h \
     vertex.h \
     halfedge.h \
-    meshtools.h \
-    mainviewqas.h
+    meshtools.h
 
 FORMS    += mainwindow.ui
 

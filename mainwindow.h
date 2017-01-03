@@ -2,10 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "objfile.h"
 #include <QFileDialog>
-#include "mesh.h"
-#include "meshtools.h"
+#include "objfile.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,8 +17,6 @@ public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
 
-  QVector<Mesh> Meshes;
-  QVector<Mesh> QAS_Meshes;
   void loadOBJ();
 
 private slots:
@@ -31,10 +27,11 @@ private slots:
   void on_LoadOBJ_clicked();
   void on_toggle_wf_mode_toggled(bool checked);
   void on_toggle_ref_lines_toggled(bool checked);
-  void on_use_qas_toggled(bool checked);
+  void on_viewModeBox_currentIndexChanged(int value);
+  void on_tessellationLevelSlider_valueChanged(int value);
 
 private:
-  Ui::MainWindow *ui;
+    Ui::MainWindow *ui;
 };
 
 #endif // MAINWINDOW_H

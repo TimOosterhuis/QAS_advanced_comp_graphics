@@ -1,10 +1,14 @@
 #version 410
 // Vertex shader
 
-layout (location = 0) in vec3 vertcoords_world_vs;
+layout (location = 0) in vec3 positions;
+layout (location = 1) in vec3 normals;
 out vec3 inputPatch;
+out vec3 inputPatchNormals;
 
-void main() {
-  //pass each vertex along the pipeline and do nothing else
-  inputPatch = vertcoords_world_vs;
+void main()
+{
+    // Pass each vertex along the pipeline
+    inputPatch = positions; // vertcoords_world_vs
+    inputPatchNormals = normals;
 }

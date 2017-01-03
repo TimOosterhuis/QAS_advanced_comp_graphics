@@ -4,50 +4,53 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   qDebug() << "✓✓ MainWindow constructor";
   ui->setupUi(this);
-  ui->toggle_wf_mode->setChecked(true);
-  ui->toggle_ref_lines->setChecked(false);
+  ui->toggle_wf_mode->setChecked(ui->MainDisplay->wireframeMode);
+  ui->toggle_ref_lines->setChecked(ui->MainDisplay->show_ref_lines);
+  ui->viewModeBox->setCurrentIndex(ui->MainDisplay->viewMode);
+  ui->tessellationLevelSlider->setValue(ui->MainDisplay->tessellationLevel);
 }
 
-MainWindow::~MainWindow() {
-  qDebug() << "✗✗ MainWindow destructor";
-  delete ui;
-
-  Meshes.clear();
-  Meshes.squeeze();
-  QAS_Meshes.clear();
-  QAS_Meshes.squeeze();
+MainWindow::~MainWindow()
+{
+    qDebug() << "✗✗ MainWindow destructor";
+    delete ui;
 }
 
-void MainWindow::loadOBJ() {
-  OBJFile newModel = OBJFile(QFileDialog::getOpenFileName(this, "Import OBJ File", "models/", tr("Obj Files (*.obj)")));
-  Meshes.clear();
-  Meshes.squeeze();
-  Meshes.append( Mesh(&newModel) );
-  QAS_Meshes.clear();
-  QAS_Meshes.squeeze();
+void MainWindow::loadOBJ()
+{
+    OBJFile newModel = OBJFile(QFileDialog::getOpenFileName(this, "Import OBJ File", "models/", tr("Obj Files (*.obj)")));
+    ui->MainDisplay->loadModelFromOBJFile(newModel);
+}
 
+void MainWindow::on_tessellationLevelSlider_valueChanged(int value)
+{
+    ui->MainDisplay->tessellationLevel = value;
+    ui->MainDisplay->update();
+}
 
-  ui->MainDisplay->updateMeshBuffers( &Meshes[0] );
-  ui->MainDisplay->modelLoaded = true;
-  ui->MainDisplay->update();
-
-  ui->QASDisplay->updateMeshBuffers( &Meshes[0] );
-  ui->QASDisplay->modelLoaded = true;
-  ui->QASDisplay->update();
+void MainWindow::on_viewModeBox_currentIndexChanged(int value)
+{
+    ui->MainDisplay->viewMode = value;
+    ui->MainDisplay->updateMatrices();
+    ui->MainDisplay->update(); // because updateMatrices should not call update()
 }
 
 void MainWindow::on_RotateDial_valueChanged(int value) {
-  ui->MainDisplay->rotAngle = value;
-  ui->MainDisplay->updateMatrices();
+    
+    // You might wonder, where did this go. Don't worry, I'll implement mousemove handler to rotate the model using a mouse instead.
+    
+  //ui->MainDisplay->rotAngle = value;
+  //ui->MainDisplay->updateMatrices();
 }
 
 void MainWindow::on_RotateDial_QAS_valueChanged(int value) {
-  ui->QASDisplay->rotAngle = value;
-  ui->QASDisplay->updateMatrices();
+  //ui->QASDisplay->rotAngle = value;
+  //ui->QASDisplay->updateMatrices();
 }
 
 void MainWindow::on_set_ref_line_size_valueChanged(int value) {
   ui->MainDisplay->ref_line_size = value;
+  ui->MainDisplay->uniformUpdateRequired = true;
   ui->MainDisplay->update();
 }
 
@@ -58,32 +61,16 @@ void MainWindow::on_toggle_wf_mode_toggled(bool checked) {
 
 void MainWindow::on_toggle_ref_lines_toggled(bool checked) {
   ui->MainDisplay->show_ref_lines = checked;
+  ui->MainDisplay->uniformUpdateRequired = true;
   ui->MainDisplay->update();
 }
 
-void MainWindow::on_use_qas_toggled(bool checked) {
-    Mesh subdividedMesh;
-    QAS_Meshes.append(Mesh());
-    if (checked) {
-        subdivideLoop(&Meshes[0], &subdividedMesh);
-        ui->QASDisplay->updateMeshBuffers( &subdividedMesh);
-        toLimit(&subdividedMesh, &QAS_Meshes.last());
-        ui->QASDisplay->updateMeshBuffersQAS( &Meshes[0], &QAS_Meshes.last());
-    } else {
-        ui->QASDisplay->updateMeshBuffers( &Meshes[0]);
-    }
-    ui->QASDisplay->update();
-}
-
-void MainWindow::on_SubdivSteps_valueChanged(int value) {
-  unsigned short k;
-
-  for (k=Meshes.size(); k<value+1; k++) {
-    Meshes.append(Mesh());
-    subdivideLoop(&Meshes[k-1], &Meshes[k]);
-  }
-
-  ui->MainDisplay->updateMeshBuffers( &Meshes[value] );
+void MainWindow::on_SubdivSteps_valueChanged(int value)
+{
+    ui->MainDisplay->currentSubdivSteps = ui->MainDisplay->MAX_SUBDIV_STEPS > value ? value : ui->MainDisplay->MAX_SUBDIV_STEPS;
+    ui->SubdivSteps->setValue(ui->MainDisplay->currentSubdivSteps);
+    ui->MainDisplay->updateVertexArrayObjectLoop();
+    ui->MainDisplay->update();
 }
 
 void MainWindow::on_LoadOBJ_clicked() {
