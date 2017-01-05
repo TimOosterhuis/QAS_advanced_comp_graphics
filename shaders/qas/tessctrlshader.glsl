@@ -1,5 +1,5 @@
 #version 410
-layout(vertices = 3) out;
+layout(vertices = 6) out;
 
 in vec3 inputPatch[];
 in vec3 inputPatchNormals[];

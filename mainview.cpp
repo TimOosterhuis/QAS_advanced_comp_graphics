@@ -168,6 +168,7 @@ void MainView::createBuffersLoop()
 void MainView::updateVertexArrayObjectQAS()
 {
     Mesh* currentMesh = &QAS_Meshes[0];
+    Mesh* originalMesh = &Meshes[0];
     
     qDebug() << ".. updateBuffers";
     
@@ -185,33 +186,68 @@ void MainView::updateVertexArrayObjectQAS()
     for (int k=0;k<currentMesh->Faces.size();++k)
     {
         currentMesh->setFaceNormal(&currentMesh->Faces[k]);
+        qDebug() << "a face normal is this:";
+        qDebug() << currentMesh->Faces[k].normal;
+
     }
-    
+
     for (int k=0;k<currentMesh->Vertices.size();++k)
     {
-        vertexNormalsQAS.append( currentMesh->computeVertexNormal(&currentMesh->Vertices[k]) );
+        QVector3D vertexNormal;
+        HalfEdge* currentEdge;
+        int m;
+        float faceAngle;
+
+        vertexNormal = QVector3D();
+        currentEdge = currentMesh->Vertices[k].out;
+
+        for (m=0; m<currentMesh->Vertices[k].val; m++) {
+          faceAngle = acos( fmax(-1.0, QVector3D::dotProduct(
+                                   (currentEdge->target->coords - currentMesh->Vertices[k].coords).normalized(),
+                                   (currentEdge->prev->twin->target->coords - currentMesh->Vertices[k].coords).normalized() ) ) );
+          if (currentEdge->polygon) {
+            //# for some reason currentEdge->polygon->normal is undefined at this point,
+            //so therefore currentMesh->computeVertexNormal
+            vertexNormal += faceAngle * currentMesh->Faces[currentEdge->polygon->index].normal;
+          }
+          currentEdge = currentEdge->twin->next;
+        }
+        vertexNormalsQAS.append( vertexNormal );
+        qDebug() << "a normal is this:";
+        qDebug() << vertexNormal;
     }
     
     // Update indices
     polyIndicesQAS.clear();
-    polyIndicesQAS.reserve(currentMesh->HalfEdges.size() + currentMesh->Faces.size());
+
+    polyIndicesQAS.reserve(currentMesh->HalfEdges.size() + originalMesh->Faces.size());
     
     // if useQAS, then we need to set control-net indices here in the *correct* order, and set GL_PATCH_VERTICES to 6 (and also in tessctrlshader set vertices = 6)
     // So idea: let's use the flag we set in Vertex.flag to check if we have an edge-point or not
     // And then we only need to get a NON-edge-point vertex, and get a triangle with other non-edge points, and catch the edge-points in between
     // Then put the indices of those vertices in the polyIndicesQAS.
     // We can either do v0 e0 v1 e1 v2 e2 or v0 v1 v2 e0 e1 e2, whatever is easier for using in the shader
-    for (int k=0;k<currentMesh->Faces.size();++k)
-    {
-        HalfEdge* currentEdge = currentMesh->Faces[k].side;
-        
-        for(int m=0;m<3;++m)
-        {
-            polyIndicesQAS.append(currentEdge->target->index);
-            currentEdge = currentEdge->next;
-        }
-    }
-    
+    //# Order doesn't really matter in the shader as long as we're consistent
+    HalfEdge* currentEdge;
+    unsigned int subdivEdgeIdx;
+    for (unsigned int k=0; k<originalMesh->Faces.size(); k++) {
+         currentEdge = originalMesh->Faces[k].side;
+         //# the way the halfedges are split when subdividing preserves the order,
+         //for an halfedge at position k in the original mesh the corresponding halfedges in the subdivided mesh can be found
+         //at positions 2*k and 2*k + 1
+         for (unsigned int m=0; m<3; m++) {
+           //# This adds the points in the order v0, e0, v1, e1, v2, e2. So in the shader controlNet 0, 2, and 4 will be triangle corner points
+           //and 1, 3, 5 will be the 'halfway points' which correspond to the edge points
+           subdivEdgeIdx = 2 * currentEdge->index;
+           polyIndicesQAS.append(currentMesh->HalfEdges[subdivEdgeIdx].target->index);
+
+           subdivEdgeIdx = 2 * currentEdge->index + 1;
+           polyIndicesQAS.append(currentMesh->HalfEdges[subdivEdgeIdx].target->index);
+
+           currentEdge = currentEdge->next;
+         }
+     }
+
     qDebug() << "Putting " << polyIndicesQAS.size() << " indices in buffer to draw...";
     
     glBindVertexArray(vaoQAS);
@@ -454,8 +490,12 @@ void MainView::paintGL()
                 }
                 
                 // Render mesh
+                qDebug() << vertexNormalsQAS.toList();
                 glBindVertexArray(vaoQAS);
                 {
+                    //set gl_patch_vertices to match control hexagon
+                    glPatchParameteri(GL_PATCH_VERTICES, 6);
+
                     // Apply wireframe/fill-mode
                     glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
                     
