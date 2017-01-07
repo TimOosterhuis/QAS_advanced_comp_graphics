@@ -20,7 +20,7 @@ void main()
     
     vec3 normal;
     //normals point inward at this point, and are therefore inverted
-    normal = normalize(-new_normal);
+    normal = normalize(new_normal);
     
     vec3 surftolight = normalize(lightpos - tePosition);
     float diffusecoeff = max(0.0, dot(surftolight, normal));

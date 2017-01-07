@@ -52,7 +52,7 @@ void main()
     //tePosition = interpolate(controlNet[0], controlNet[2], controlNet[4]);
     
     // Also, we'll need to calculate the correct normals
-    new_normal = -getBezierPos(u, v, w, controlNetNormals[0], controlNetNormals[2], controlNetNormals[4], controlNetNormals[1], controlNetNormals[3], controlNetNormals[5]);
+    new_normal = getBezierPos(u, v, w, controlNetNormals[0], controlNetNormals[2], controlNetNormals[4], controlNetNormals[1], controlNetNormals[3], controlNetNormals[5]);
     new_normal = normalize(normalmatrix * new_normal);
     
     gl_Position = projectionmatrix * modelviewmatrix * vec4(tePosition, 1);
