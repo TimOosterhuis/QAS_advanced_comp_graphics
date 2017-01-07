@@ -12,6 +12,7 @@
 #include "mesh.h"
 #include "meshtools.h"
 #include <unordered_map>
+#include <cmath>
 
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 

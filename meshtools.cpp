@@ -384,7 +384,8 @@ void toLimit(Mesh* inputMesh, Mesh* limitMesh) {
         } else {
             //normal rules
             //contribution of the original vertex
-            sum = ((float)(valency - 3)/(float)(valency + 5)) * limitMesh->Vertices[i].coords;
+            //sum = ((float)(valency - 3)/(float)(valency + 5)) * limitMesh->Vertices[i].coords; -> don't cast floats like this, try this on Suzanne model, in certain cases you'll get extreme values of >100000
+            sum = (valency - 3.0f) / (valency + 5.0f) * limitMesh->Vertices[i].coords;
             //calculate the sum of edge and face points in the one ring neighborhood
             QVector3D sumPt;
             for (int j = 0; j < valency; j++) {
@@ -400,7 +401,7 @@ void toLimit(Mesh* inputMesh, Mesh* limitMesh) {
                 currentOutEdge = currentOutEdge->twin->next;
             }
             //add contribution of the one ring neighbourhood
-            limitMesh->Vertices[i].coords = sum + (4.0 / (float)(valency * (valency + 5))) * sumPt;
+            limitMesh->Vertices[i].coords = sum + (4.0f / (valency * (valency + 5.0f))) * sumPt;
         }
     }
 }
