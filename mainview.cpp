@@ -104,6 +104,8 @@ void MainView::initUniformLocationsQAS()
     uniformsQAS["modelviewmatrix"] = qasShaderProg.uniformLocation("modelviewmatrix");
     uniformsQAS["projectionmatrix"] = qasShaderProg.uniformLocation("projectionmatrix");
     uniformsQAS["normalmatrix"] = qasShaderProg.uniformLocation("normalmatrix");
+    uniformsQAS["show_reflines"] = qasShaderProg.uniformLocation("show_isophotes");
+    uniformsQAS["refline_size"] = qasShaderProg.uniformLocation("isophote_size");
 }
 
 void MainView::initUniformLocationsLoop()
@@ -216,7 +218,7 @@ void MainView::updateVertexArrayObjectQAS()
         //qDebug() << "a normal is this:";
         //qDebug() << vertexNormal;
     }
-    
+
     // Update indices
     polyIndicesQAS.clear();
 
@@ -322,7 +324,6 @@ void MainView::updateVertexArrayObjectLoop()
     {
         vertexNormalsLoop.append( currentMesh->computeVertexNormal(&currentMesh->Vertices[k]) );
     }
-    
     // Update indices
     polyIndicesLoop.clear();
     polyIndicesLoop.reserve(currentMesh->HalfEdges.size() + currentMesh->Faces.size());
@@ -509,6 +510,9 @@ void MainView::paintGL()
                     
                     glUniform1f(uniformsQAS["tess_level_inner"], tessellationLevel);
                     glUniform1f(uniformsQAS["tess_level_outer"], tessellationLevel);
+
+                    glUniform1i(uniformsQAS["show_reflines"], show_ref_lines);
+                    glUniform1i(uniformsQAS["refline_size"], ref_line_size);
                 }
                 
                 // Render mesh
@@ -574,8 +578,10 @@ void MainView::paintGL()
                     // Draw the selected control point if it exists
                     if(pointSelected)
                     {
-                        glPointSize(12.0);
-                        glDrawArrays(GL_POINTS, selectedPoint, 1);
+                        //I don't know if vertex selection really adds anything at this point...
+                        //At least not if it's only for Loop
+                        //glPointSize(12.0);
+                        //glDrawArrays(GL_POINTS, selectedPoint, 1);
                     }
                 }
                 glBindVertexArray(0);
