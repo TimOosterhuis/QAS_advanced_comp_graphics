@@ -19,7 +19,6 @@ void main()
     float matspecularcoeff = 0.4;
     
     vec3 normal;
-    //normals point inward at this point, and are therefore inverted
     normal = normalize(new_normal);
     
     vec3 surftolight = normalize(lightpos - tePosition);
