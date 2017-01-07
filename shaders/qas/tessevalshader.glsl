@@ -56,5 +56,7 @@ void main()
     new_normal = normalize(normalmatrix * new_normal);
     
     gl_Position = projectionmatrix * modelviewmatrix * vec4(tePosition, 1);
+    tePosition = vec3(modelviewmatrix * vec4(tePosition, 1.0));
+
 
 }
