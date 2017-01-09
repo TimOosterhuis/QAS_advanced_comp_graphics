@@ -67,7 +67,7 @@ void MainView::loadModelFromOBJFile(OBJFile model)
     QAS_Meshes.append(Mesh());
     
     // Prepare QAS Mesh
-    toLimit(&Meshes[1], &QAS_Meshes[0]);
+    toLimit(&Meshes[1 + qasSubdivOffset], &QAS_Meshes[0]);
     
     updateVertexArrayObjectQAS();
     
@@ -75,6 +75,20 @@ void MainView::loadModelFromOBJFile(OBJFile model)
     // Finished loading model
     updateMatrices();
     modelLoaded = true;
+    update();
+}
+
+void MainView::updateQASMesh()
+{
+    // Additional feature:
+    QAS_Meshes.clear();
+    QAS_Meshes.squeeze();
+    QAS_Meshes.append(Mesh());
+    
+    toLimit(&Meshes[1 + qasSubdivOffset], &QAS_Meshes[0]);
+    
+    updateVertexArrayObjectQAS();
+    
     update();
 }
 
@@ -170,7 +184,7 @@ void MainView::createBuffersLoop()
 void MainView::updateVertexArrayObjectQAS()
 {
     Mesh* currentMesh = &QAS_Meshes[0];
-    Mesh* originalMesh = &Meshes[0];
+    Mesh* originalMesh = &Meshes[0 + qasSubdivOffset];
     
     qDebug() << ".. updateBuffers";
     

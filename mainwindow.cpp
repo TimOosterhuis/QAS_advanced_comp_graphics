@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   ui->toggle_ref_lines->setChecked(ui->MainDisplay->show_ref_lines);
   ui->viewModeBox->setCurrentIndex(ui->MainDisplay->viewMode);
   ui->tessellationLevelSlider->setValue(ui->MainDisplay->tessellationLevel);
+  ui->qasSubdivOffsetBox->setValue(ui->MainDisplay->qasSubdivOffset);
 }
 
 MainWindow::~MainWindow()
@@ -20,6 +21,12 @@ void MainWindow::loadOBJ()
 {
     OBJFile newModel = OBJFile(QFileDialog::getOpenFileName(this, "Import OBJ File", "models/", tr("Obj Files (*.obj)")));
     ui->MainDisplay->loadModelFromOBJFile(newModel);
+}
+
+void MainWindow::on_qasSubdivOffsetBox_valueChanged(int value)
+{
+    ui->MainDisplay->qasSubdivOffset = value;
+    ui->MainDisplay->updateQASMesh();
 }
 
 void MainWindow::on_tessellationLevelSlider_valueChanged(int value)

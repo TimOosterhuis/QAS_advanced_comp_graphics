@@ -29,6 +29,7 @@ private slots:
   void on_toggle_ref_lines_toggled(bool checked);
   void on_viewModeBox_currentIndexChanged(int value);
   void on_tessellationLevelSlider_valueChanged(int value);
+  void on_qasSubdivOffsetBox_valueChanged(int value);
 
 private:
     Ui::MainWindow *ui;

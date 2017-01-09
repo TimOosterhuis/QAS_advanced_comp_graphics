@@ -31,6 +31,8 @@ public:
   QVector<Mesh> Meshes;
   QVector<Mesh> QAS_Meshes;
   
+  int qasSubdivOffset = 0;
+  
   int tessellationLevel = 0;
   int currentSubdivSteps = 0;
   int viewMode = 0;
@@ -52,6 +54,7 @@ public:
 
   bool uniformUpdateRequired;
 
+  void updateQASMesh();
   void loadModelFromOBJFile(OBJFile model);
   void updateMatrices();
   void updateMatricesLoop();
