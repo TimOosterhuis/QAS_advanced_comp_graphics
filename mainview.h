@@ -32,6 +32,7 @@ public:
   QVector<Mesh> QAS_Meshes;
   
   int qasSubdivOffset = 0;
+  bool adaptiveTessellation = false;
   
   int tessellationLevel = 0;
   int currentSubdivSteps = 0;

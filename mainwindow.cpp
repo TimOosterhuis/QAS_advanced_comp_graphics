@@ -9,12 +9,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   ui->viewModeBox->setCurrentIndex(ui->MainDisplay->viewMode);
   ui->tessellationLevelSlider->setValue(ui->MainDisplay->tessellationLevel);
   ui->qasSubdivOffsetBox->setValue(ui->MainDisplay->qasSubdivOffset);
+  ui->adaptiveTessellationBox->setChecked(ui->MainDisplay->adaptiveTessellation);
 }
 
 MainWindow::~MainWindow()
 {
     qDebug() << "✗✗ MainWindow destructor";
     delete ui;
+}
+
+void MainWindow::on_adaptiveTessellationBox_toggled(bool checked)
+{
+    ui->MainDisplay->adaptiveTessellation = checked;
+    ui->MainDisplay->update();
 }
 
 void MainWindow::loadOBJ()

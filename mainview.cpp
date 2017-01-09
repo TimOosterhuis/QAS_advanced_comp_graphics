@@ -120,6 +120,7 @@ void MainView::initUniformLocationsQAS()
     uniformsQAS["normalmatrix"] = qasShaderProg.uniformLocation("normalmatrix");
     uniformsQAS["show_reflines"] = qasShaderProg.uniformLocation("show_isophotes");
     uniformsQAS["refline_size"] = qasShaderProg.uniformLocation("isophote_size");
+    uniformsQAS["adaptive_tessellation"] = qasShaderProg.uniformLocation("adaptive_tessellation");
 }
 
 void MainView::initUniformLocationsLoop()
@@ -527,6 +528,8 @@ void MainView::paintGL()
 
                     glUniform1i(uniformsQAS["show_reflines"], show_ref_lines);
                     glUniform1i(uniformsQAS["refline_size"], ref_line_size);
+                    
+                    glUniform1i(uniformsQAS["adaptive_tessellation"], adaptiveTessellation ? 1 : 0);
                 }
                 
                 // Render mesh

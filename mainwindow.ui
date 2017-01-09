@@ -226,7 +226,7 @@ QGroupBox::title {
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>460</y>
+         <y>430</y>
          <width>181</width>
          <height>16</height>
         </rect>
@@ -245,7 +245,7 @@ QGroupBox::title {
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>440</y>
+         <y>410</y>
          <width>181</width>
          <height>16</height>
         </rect>
@@ -258,7 +258,7 @@ QGroupBox::title {
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>380</y>
+         <y>350</y>
          <width>181</width>
          <height>16</height>
         </rect>
@@ -271,10 +271,23 @@ QGroupBox::title {
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>400</y>
+         <y>370</y>
          <width>181</width>
          <height>23</height>
         </rect>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="adaptiveTessellationBox">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>450</y>
+         <width>181</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Adaptive tessellation</string>
        </property>
       </widget>
      </widget>
