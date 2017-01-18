@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <cmath>
 
+#include <QTime>
+
 class MainView : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 
   Q_OBJECT
@@ -26,7 +28,7 @@ public:
   static const int VIEW_MODE_QAS = 1;
   static const int VIEW_MODE_LOOP_AND_QAS = 2;
   
-  const int MAX_SUBDIV_STEPS = 4; // or 5 maybe
+  const int MAX_SUBDIV_STEPS = 5; // or 5 maybe
   
   QVector<Mesh> Meshes;
   QVector<Mesh> QAS_Meshes;
@@ -60,7 +62,6 @@ public:
   void updateMatrices();
   void updateMatricesLoop();
   void updateMatricesQAS();
-  //void updateMeshBuffers();//Mesh* currentMesh);
   void updateVertexArrayObjectQAS();
   void updateVertexArrayObjectLoop();
 
@@ -111,9 +112,6 @@ private:
   unsigned int meshIBOSize;
 
   // ---
-  bool pointSelected;
-  int selectedPoint;
-  void rayTrace(QVector4D ray);
 
   QVector<QVector3D> vertexCoordsLoop;
   QVector<QVector3D> vertexNormalsLoop;

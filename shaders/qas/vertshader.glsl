@@ -9,6 +9,6 @@ out vec3 inputPatchNormals;
 void main()
 {
     // Pass each vertex along the pipeline
-    inputPatch = positions; // vertcoords_world_vs
+    inputPatch = positions;
     inputPatchNormals = normals;
 }

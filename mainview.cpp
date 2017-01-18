@@ -18,7 +18,6 @@ MainView::MainView(QWidget *Parent) : QOpenGLWidget(Parent)
     
     ref_line_size = 1;
     show_ref_lines = false;
-    pointSelected = false;
 }
 
 MainView::~MainView()
@@ -152,7 +151,6 @@ void MainView::createBuffersQAS()
         }
         
         glGenBuffers(1, &vboQASIndices);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshIndexBO);
     }
     glBindVertexArray(0);
 }
@@ -177,7 +175,6 @@ void MainView::createBuffersLoop()
         }
         
         glGenBuffers(1, &meshIndexBO);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshIndexBO); -> why bind this?
     }
     glBindVertexArray(0);
 }
@@ -203,9 +200,6 @@ void MainView::updateVertexArrayObjectQAS()
     for (int k=0;k<currentMesh->Faces.size();++k)
     {
         currentMesh->setFaceNormal(&currentMesh->Faces[k]);
-        //qDebug() << "a face normal is this:";
-        //qDebug() << currentMesh->Faces[k].normal;
-
     }
 
     for (int k=0;k<currentMesh->Vertices.size();++k)
@@ -223,68 +217,43 @@ void MainView::updateVertexArrayObjectQAS()
                                    (currentEdge->target->coords - currentMesh->Vertices[k].coords).normalized(),
                                    (currentEdge->prev->twin->target->coords - currentMesh->Vertices[k].coords).normalized() ) ) );
           if (currentEdge->polygon) {
-            //# for some reason currentEdge->polygon->normal is undefined at this point,
-            //so therefore currentMesh->computeVertexNormal
+            //For some reason currentEdge->polygon->normal is undefined at this point,
+            //so therefore the built in computeVertexNormal doesn't return anything and it's easiest calculate the vertex normal like this
             vertexNormal += faceAngle * currentMesh->Faces[currentEdge->polygon->index].normal;
           }
           currentEdge = currentEdge->twin->next;
         }
         vertexNormalsQAS.append( vertexNormal );
-        //qDebug() << "a normal is this:";
-        //qDebug() << vertexNormal;
     }
 
     // Update indices
     polyIndicesQAS.clear();
 
-    polyIndicesQAS.reserve(currentMesh->HalfEdges.size() + originalMesh->Faces.size());
+    polyIndicesQAS.reserve(currentMesh->HalfEdges.size());
     
-    // if useQAS, then we need to set control-net indices here in the *correct* order, and set GL_PATCH_VERTICES to 6 (and also in tessctrlshader set vertices = 6)
-    // So idea: let's use the flag we set in Vertex.flag to check if we have an edge-point or not
-    // And then we only need to get a NON-edge-point vertex, and get a triangle with other non-edge points, and catch the edge-points in between
-    // Then put the indices of those vertices in the polyIndicesQAS.
-    // We can either do v0 e0 v1 e1 v2 e2 or v0 v1 v2 e0 e1 e2, whatever is easier for using in the shader
-    //# Order doesn't really matter in the shader as long as we're consistent
-    //HalfEdge* currentEdge; // -> this is not C, best practice in C++ is to define variables as locally as possible (not to mention that it makes code unmaintainable and unreadable).
-    //unsigned int subdivEdgeIdx;
-    for (unsigned int k=0; k<originalMesh->Faces.size(); k++) // -> why would you do this? either use size_t, or just int.
+    //We need to set control-net vertex indices here in the *correct* order
+    for (unsigned int k=0; k<originalMesh->Faces.size(); k++)
     {
+        //The way the halfedges are split when subdividing can be used to find the right vertices,
          HalfEdge* currentEdge = originalMesh->Faces[k].side;
-         //# the way the halfedges are split when subdividing preserves the order,
-         //for an halfedge at position k in the original mesh the corresponding halfedges in the subdivided mesh can be found
-         //at positions 2*k and 2*k + 1
-         
-         // yeah man, apparently not. this is the correct ordering:
-         
-         int e1 = currentMesh->HalfEdges[currentEdge->index * 2].target->index;
+
+         int e12 = currentMesh->HalfEdges[currentEdge->index * 2].target->index;
          int p1 = currentMesh->HalfEdges[currentEdge->index * 2 + 1].target->index;
          
          currentEdge = currentEdge->next;
-         int e0 = currentMesh->HalfEdges[currentEdge->index * 2].target->index;
+         int e01 = currentMesh->HalfEdges[currentEdge->index * 2].target->index;
          int p0 = currentMesh->HalfEdges[currentEdge->index * 2 + 1].target->index;
          
          currentEdge = currentEdge->next;
-         int e2 = currentMesh->HalfEdges[currentEdge->index * 2].target->index;
+         int e02 = currentMesh->HalfEdges[currentEdge->index * 2].target->index;
          int p2 = currentMesh->HalfEdges[currentEdge->index * 2 + 1].target->index;
          
          polyIndicesQAS.append(p0);
-         polyIndicesQAS.append(e0);
+         polyIndicesQAS.append(e01);
          polyIndicesQAS.append(p1);
-         polyIndicesQAS.append(e1);
+         polyIndicesQAS.append(e12);
          polyIndicesQAS.append(p2);
-         polyIndicesQAS.append(e2);
-         
-         /*for (unsigned int m=0; m<3; m++) {
-           //# This adds the points in the order v0, e0, v1, e1, v2, e2. So in the shader controlNet 0, 2, and 4 will be triangle corner points
-           //and 1, 3, 5 will be the 'halfway points' which correspond to the edge points
-           subdivEdgeIdx = 2 * currentEdge->index;
-           polyIndicesQAS.append(currentMesh->HalfEdges[subdivEdgeIdx].target->index);
-
-           subdivEdgeIdx = 2 * currentEdge->index + 1;
-           polyIndicesQAS.append(currentMesh->HalfEdges[subdivEdgeIdx].target->index);
-
-           currentEdge = currentEdge->next;
-         }*/
+         polyIndicesQAS.append(e02);
      }
 
     qDebug() << "Putting " << polyIndicesQAS.size() << " indices in buffer to draw...";
@@ -343,7 +312,7 @@ void MainView::updateVertexArrayObjectLoop()
     polyIndicesLoop.clear();
     polyIndicesLoop.reserve(currentMesh->HalfEdges.size() + currentMesh->Faces.size());
     
-    // if useQAS, then we need to set control-net indices here in the *correct* order, and set GL_PATCH_VERTICES to 6 (and also in tessctrlshader set vertices = 6)
+    // Update polyindices
     for (int k=0;k<currentMesh->Faces.size();++k)
     {
         HalfEdge* currentEdge = currentMesh->Faces[k].side;
@@ -357,11 +326,6 @@ void MainView::updateVertexArrayObjectLoop()
     
     qDebug() << "Putting " << polyIndicesLoop.size() << " indices in buffer to draw...";
     
-    // TODO: Later we should load two buffers, one for Loop subdiv and one for QAS.
-    // That way we can show in the Render-step both at the same time side-by-side.
-    // There should be a slider to set the X-offset of both models in opposite directions,
-    // so that the redendered models can be compared in overlay and next to each other.
-    // The value of the slider should affect the modelview matrix uniform.
     glBindVertexArray(meshVAO);
     {
         glBindBuffer(GL_ARRAY_BUFFER, meshCoordsBO);
@@ -392,7 +356,7 @@ void MainView::updateMatrices()
     updateMatricesLoop();
     updateMatricesQAS();
     
-    update(); // this shouldn't be called here, but rather in the calling function
+    update();
 }
 
 void MainView::updateMatricesQAS()
@@ -466,8 +430,8 @@ void MainView::initializeGL()
     // Default is GL_LESS
     glDepthFunc(GL_LEQUAL);
     
-    glPatchParameteri(GL_PATCH_VERTICES, 6); // triangles: 3, quads: 4, ...
-    // For reference: max tessellation level: GL_MAX_TESS_GEN_LEVEL, we need this for tessellation level slider
+    //set gl_patch_vertices to match control hexagon
+    glPatchParameteri(GL_PATCH_VERTICES, 6);
     
     glEnable(GL_PRIMITIVE_RESTART);
     unsigned int maxInt = ((unsigned int) -1);
@@ -502,20 +466,17 @@ void MainView::paintGL()
     // Clean framebuffer
     glClearColor(239/255.0f, 235/255.0f, 231/255.0f, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     
     if(modelLoaded)
     {
-        // We can also draw both ontop of each other, and then set opacity with slider (QAS.opacity = 1 - Loop.opacity), so we can fade one into the other
-        // Opacity then is a uniform we change on the fly
         
         // Draw QAS only if we want to
         if(viewMode == VIEW_MODE_LOOP_AND_QAS || viewMode == VIEW_MODE_QAS)
         {
-            // qDebug() << "QAS render pass";
             
             qasShaderProg.bind();
             {
-                //if(uniformUpdateRequired)
                 {
                     // Update model/view/projection matrices
                     
@@ -533,11 +494,8 @@ void MainView::paintGL()
                 }
                 
                 // Render mesh
-                //qDebug() << vertexNormalsQAS.toList(); -> not really useful
                 glBindVertexArray(vaoQAS);
                 {
-                    //set gl_patch_vertices to match control hexagon
-                    //glPatchParameteri(GL_PATCH_VERTICES, 6); -> no need to do that here every single render pass
 
                     // Apply wireframe/fill-mode
                     glPolygonMode(GL_FRONT_AND_BACK, wireframeMode ? GL_LINE : GL_FILL);
@@ -547,28 +505,19 @@ void MainView::paintGL()
                     {
                         glDrawElements(GL_PATCHES, vboQASIndicesCount, GL_UNSIGNED_INT, 0);
                     }
-                    
-                    // Draw the selected control point if it exists
-                    if(pointSelected)
-                    {
-                        // Maybe it's better to specify a uniform that says if it is selected or not
-                        // And then we can select any of the vectors, that is, just a uniform to override colors
-                        // And then just use the same glDrawElements again here after changing that uniform
-                    }
                 }
                 glBindVertexArray(0);
             }
             qasShaderProg.release();
+
         }
         
         if(viewMode == VIEW_MODE_LOOP_AND_QAS || viewMode == VIEW_MODE_LOOP)
         {
-            // qDebug() << "Loop render pass";
-            
+
             // Draw Loop Subdivision
             mainShaderProg->bind();
             {
-                //if(uniformUpdateRequired) what is the performance gain here really, this can only give confusion, let's save optimizations for when we're done
                 {
                     // Update model/view/projection matrices
                     glUniformMatrix4fv(uniModelViewMatrix, 1, false, modelViewMatrix.data());
@@ -591,26 +540,29 @@ void MainView::paintGL()
                     {
                         glDrawElements(GL_TRIANGLES, meshIBOSize, GL_UNSIGNED_INT, 0);
                     }
-                    
-                    // Draw the selected control point if it exists
-                    if(pointSelected)
-                    {
-                        //I don't know if vertex selection really adds anything at this point...
-                        //At least not if it's only for Loop
-                        //glPointSize(12.0);
-                        //glDrawArrays(GL_POINTS, selectedPoint, 1);
-                    }
                 }
                 glBindVertexArray(0);
             }
             mainShaderProg->release();
         }
-        
-        
+
         uniformUpdateRequired = false;
     }
 }
 
+void MainView::mousePressEvent(QMouseEvent* event)
+{
+    setFocus();
+
+    // Enable tracking for use in mouseMoveEvent
+    setMouseTracking(true);
+
+    drag = 1;
+    grabX = event->x();
+    grabY = event->y();
+    grabRotAngle = rotAngle;
+
+}
 
 void MainView::mouseReleaseEvent(QMouseEvent *event)
 {
@@ -628,85 +580,9 @@ void MainView::mouseMoveEvent(QMouseEvent *event)
         int dy = grabY - event->y();
         
         rotAngle = grabRotAngle + dx * 0.5f; // 2px is 1deg
-        // rotAngle is actually rotAngleY, we can add rotAngleZ here too..
-        // and then we should allocate x,y based on current rotation values to always rotate around axes MOST perpendicular to camera
-        // but one rotational axis is good enough for now
         
         updateMatrices();
     }
-}
-
-//on a mouse click, try to determine the nearest vertex
-void MainView::mousePressEvent(QMouseEvent* event)
-{
-    setFocus();
-    
-    // Enable tracking for use in mouseMoveEvent
-    setMouseTracking(true);
-    
-    drag = 1;
-    grabX = event->x();
-    grabY = event->y();
-    grabRotAngle = rotAngle;
-    
-    
-    float xRatio, yRatio, xScene, yScene;
-    //x and y coordinates in window space
-    xRatio = (float)event->x() / width();
-    yRatio = (float)event->y() / height();
-    
-    // By default, the drawing canvas is the square [-1,1]^2:
-    xScene = (1-xRatio)*-1 + xRatio*1;
-    // Note that the origin of the canvas is in the top left corner (not the lower left).
-    yScene = yRatio*-1 + (1-yRatio)*1;
-    //ray direction in clipping space
-    QVector4D ray_clip = QVector4D(xScene, yScene, -1.0, 1.0);
-    //multiply by the inverted projection matrix to get the x and y direction in camera space
-    QVector4D ray_eye = projectionMatrix.inverted() * ray_clip;
-    //manually set the z direction and w coordinate to create a ray direction vector camera space
-    ray_eye.setZ(-1.0);
-    ray_eye.setW(0.0);
-    //multiply by the inverted modelview matrix and normalize to get the unit ray direction vector
-    //in world/object space
-    QVector4D ray_world = modelViewMatrix.inverted() * ray_eye;
-    ray_world = ray_world.normalized();
-    
-    //ray trace and rerender if a ray intersects a mesh vertex
-    rayTrace(ray_world);
-    update();
-
-}
-
-void MainView::rayTrace(QVector4D ray) {
-    float min_dist = 1;
-    //calculate the ray origin (camera position) in world/object space
-    QVector4D camera_pos = modelViewMatrix.inverted() * QVector4D(0.0,0.0,0.0,1.0);
-    //cast a ray for every vertex
-    for (int k = 0; k < vertexCoordsLoop.size(); k++) {
-        //solve the equation between the ray and the plane obtained by the vertex coordinates and it's normalvector
-        QVector4D V0 = QVector4D(vertexCoordsLoop[k], 1.0) - camera_pos;
-        float dotV0Normal = V0.x() * vertexNormalsLoop[k].x() + V0.y() * vertexNormalsLoop[k].y() + V0.z() * vertexNormalsLoop[k].z();
-        float dotRayNormal = ray.x() * vertexNormalsLoop[k].x() + ray.y() * vertexNormalsLoop[k].y() + ray.z() * vertexNormalsLoop[k].z();
-        float t = dotV0Normal/dotRayNormal;
-
-        QVector4D intersect = camera_pos + (t * ray);
-
-        //calculate the distance between the ray plane intersection point vertex
-        float dist = (QVector4D(vertexCoordsLoop[k], 1.0) - intersect).length();
-
-        //future TO DO: somehow incorporate the angle between the ray and the vertex plane in this distance measurement
-        //(as of now the selection area (in screen space) is slightly larger for some vertexes than others, because the same distance
-        //away from the vertex in screen space will result in a relatively larger increase of the distance of the ray plane intersection point
-        //from the vertex point the more parallel the vertex plane is to the ray)
-
-        //the index of the point with the closest ray intersection through it's plane is saved globally for later rendering
-        if (dist < min_dist) {
-            selectedPoint = k;
-            min_dist = dist;
-        }
-    }
-    //If the mininum intersection distance is 'close' enough, consider the vertex selected.
-    pointSelected = min_dist < 0.2;
 }
 
 void MainView::wheelEvent(QWheelEvent* event) {

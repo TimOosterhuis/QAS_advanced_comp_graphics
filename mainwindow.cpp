@@ -49,17 +49,12 @@ void MainWindow::on_viewModeBox_currentIndexChanged(int value)
     ui->MainDisplay->update(); // because updateMatrices should not call update()
 }
 
-void MainWindow::on_RotateDial_valueChanged(int value) {
-    
-    // You might wonder, where did this go. Don't worry, I'll implement mousemove handler to rotate the model using a mouse instead.
-    
-  //ui->MainDisplay->rotAngle = value;
-  //ui->MainDisplay->updateMatrices();
+void MainWindow::on_RotateDial_valueChanged(int value) { 
+    //Mousemove handler is used to rotate the model
 }
 
 void MainWindow::on_RotateDial_QAS_valueChanged(int value) {
-  //ui->QASDisplay->rotAngle = value;
-  //ui->QASDisplay->updateMatrices();
+    //Mousemove handler is used to rotate the model
 }
 
 void MainWindow::on_set_ref_line_size_valueChanged(int value) {

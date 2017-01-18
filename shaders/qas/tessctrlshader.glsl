@@ -43,12 +43,11 @@ void main()
             tessLevelInner = clamp(tess_level_inner / distToCamera, 1.0, 64.0);
             tessLevelOuter = clamp(tess_level_outer / distToCamera, 1.0, 64.0);
             
-            // make sure tess levels are power of 2 to prevent cracks
+            //Make sure tess levels are power of 2 to prevent cracks
             tessLevelInner = pow(2, ceil(log(tessLevelInner)/log(2)));
-            // we should make sure tess_level_outer is the same for same distances
-            // not only do this, but also check other values for i
-            // but for now, outer tess levels are just static:
-            tessLevelOuter = clamp(tess_level_outer / 4.0, 1.0, 64.0);//pow(2, ceil(log(tessLevelOuter)/log(2)));
+
+            //For now, outer tess levels are just static:
+            tessLevelOuter = clamp(tess_level_outer / 4.0, 1.0, 64.0);
         }
         
         // Inner tesselation level
