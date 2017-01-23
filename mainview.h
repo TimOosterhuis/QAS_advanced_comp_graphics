@@ -26,15 +26,33 @@ public:
   static const int VIEW_MODE_QAS = 1;
   static const int VIEW_MODE_LOOP_AND_QAS = 2;
   
+  float BACKGROUND_TRANSPARENT[4] = {239/255.0f, 235/255.0f, 231/255.0f, 1.0f};
+  float BACKGROUND_BLACK[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+  float BACKGROUND_DARK_GRAY[4] = {64/255.0f, 64/255.0f, 64/255.0f, 1.0f};
+  float BACKGROUND_WHITE[4] = {255/255.0f, 255/255.0f, 255/255.0f, 1.0f};
+  
   const int MAX_SUBDIV_STEPS = 4; // or 5 maybe
   
   QVector<Mesh> Meshes;
   QVector<Mesh> QAS_Meshes;
   
+  GLuint qasPolygonCountValue = 0;
+  GLuint loopPolygonCountValue = 0;
+  
+  float backgroundColor[4];
+  
+  int curvatureMode = 0;
+  
+  float zoomTess = 1.0;
+  float curvTess = 1.0;
+  float normTess = 1.0;
+  
   int qasSubdivOffset = 0;
   bool adaptiveTessellation = false;
   
-  int tessellationLevel = 0;
+  int tessMinValue = 1;
+  int tessMaxValue = 64;
+  int tessellationLevel = 1;
   int currentSubdivSteps = 0;
   int viewMode = 0;
   
@@ -98,6 +116,8 @@ private:
   int vboQASIndicesCount;
   std::unordered_map<std::string, GLint> uniformsQAS;
   
+  // QAS query
+  GLuint pgQuery;
   
   // Uniforms
   GLint uniModelViewMatrix, uniProjectionMatrix, uniNormalMatrix;

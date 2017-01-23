@@ -15,7 +15,10 @@ public:
   Mesh();
   Mesh(OBJFile *loadedOBJFile);
   ~Mesh();
-
+  
+  bool gaussianCurvatureComputed = false;
+  
+  void computeGaussianCurvatures(bool override = false);
   void setTwins(unsigned int numHalfEdges, unsigned int indexH);
 
   QVector<Vertex> Vertices;

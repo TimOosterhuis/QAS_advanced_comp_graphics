@@ -2,9 +2,13 @@
 // Fragment shader
 in vec3 tePosition;
 in vec3 new_normal;
+in float fCurvature;
 
 uniform bool show_isophotes;
 uniform int isophote_size;
+uniform int curvature_mode;
+
+uniform mat4 projectionmatrix;
 
 out vec4 fColor;
 
@@ -15,9 +19,10 @@ void main()
     normal = normalize(new_normal);
 
     vec3 compcolour;
+    float alpha = 1.0;
 
-    //if isophote lines are enabled
-    if (show_isophotes) {
+    if (show_isophotes)
+    {
         //initialize an arbitrary vector to compare with the normal at each pixel
         vec3 isophote_vec = vec3(1.0, 0.0, 0.0);
         //Look at the angle of the isophote vector and the normal (scaled with the isopote_size value) if it rounds to an even number
@@ -31,7 +36,9 @@ void main()
             compcolour = vec3(1.0,0.0,0.0); //red
         }
 
-    }  else {
+    }
+    else
+    {
         //phong
 
         vec3 lightpos = vec3(3.0, 0.0, 2.0);
@@ -54,7 +61,23 @@ void main()
 
         compcolour = min(1.0, matambientcoeff + matdiffusecoeff * diffusecoeff) * lightcolour * matcolour;
         compcolour += matspecularcoeff * specularcoeff * lightcolour * matspeccolour;
+        
+        // Overlay curvature
+        if(curvature_mode > 0)
+        {
+            int mode = 2; // 1 -> override, 2 -> mix curvature
+            if(fCurvature >= 0.0)
+            {
+                compcolour = vec3(fCurvature, 0.0, 0.0) + (mode - 1) * compcolour * (1 - 0.5 * fCurvature);
+            }
+            else
+            {
+                compcolour = vec3(0.0, 0.0, -fCurvature) + (mode - 1) * compcolour * (1 + 0.5 * fCurvature);
+            }
+        }
+        
+        // use gl_FragCoord to implement fog
     }
 
-    fColor = vec4(compcolour, 1.0);
+    fColor = vec4(compcolour, alpha);
 }

@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QFileDialog>
+#include <QThread>
+#include "guiupdater.h"
 #include "objfile.h"
 
 namespace Ui {
@@ -18,8 +20,15 @@ public:
   ~MainWindow();
 
   void loadOBJ();
+  void updateStats();
 
 private slots:
+  void on_qasTessMinSlider_valueChanged(int value);
+  void on_qasTessMaxSlider_valueChanged(int value);
+  void on_zoomTessSlider_valueChanged(double value);
+  void on_curvTessSlider_valueChanged(double value);
+  void on_normTessSlider_valueChanged(double value);
+  void on_normalCurvatureBox_toggled(bool checked);
   void on_RotateDial_valueChanged(int value);
   void on_RotateDial_QAS_valueChanged(int value);
   void on_SubdivSteps_valueChanged(int value);
@@ -31,6 +40,7 @@ private slots:
   void on_tessellationLevelSlider_valueChanged(int value);
   void on_qasSubdivOffsetBox_valueChanged(int value);
   void on_adaptiveTessellationBox_toggled(bool checked);
+  void on_backgroundBox_currentIndexChanged(int value);
 
 private:
     Ui::MainWindow *ui;

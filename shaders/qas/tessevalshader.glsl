@@ -3,9 +3,11 @@ layout(triangles, equal_spacing, ccw) in;
 
 in vec3 controlNet[];
 in vec3 controlNetNormals[];
+in float controlNetCurvature[];
 
 out vec3 tePosition;
 out vec3 new_normal;
+out float fCurvature;
 
 uniform mat4 modelviewmatrix;
 uniform mat4 projectionmatrix;
@@ -35,6 +37,19 @@ vec3 getBezierPos(float u, float v, float w, vec3 p0, vec3 p1, vec3 p2, vec3 e0,
 
 }
 
+// Note: TODO: Should make a generic function that accepts any float/vec2/vec3/vec4 (not sure if possible)
+float edgePointFloat(float e, float p0, float p1)
+{
+    return ((e * 4.0 - p0 - p1) * 0.5);
+}
+float getBezierFloat(float u, float v, float w, float p0, float p1, float p2, float e0, float e1, float e2)
+{
+    return w * (p0 * w + edgePointFloat(e0, p0, p1) * 2 * u)
+         + u * (p1 * u + edgePointFloat(e1, p1, p2) * 2 * v)
+         + v * (p2 * v + edgePointFloat(e2, p0, p2) * 2 * w);
+
+}
+
 void main()
 { 
     // Get barycentric coordinates
@@ -54,6 +69,9 @@ void main()
     // Also, we'll need to calculate the correct normals
     new_normal = getBezierPos(u, v, w, controlNetNormals[0], controlNetNormals[2], controlNetNormals[4], controlNetNormals[1], controlNetNormals[3], controlNetNormals[5]);
     new_normal = normalize(normalmatrix * new_normal);
+    
+    // calculate correct curvature
+    fCurvature = getBezierFloat(u, v, w, controlNetCurvature[0], controlNetCurvature[2], controlNetCurvature[4], controlNetCurvature[1], controlNetCurvature[3], controlNetCurvature[5]);
     
     gl_Position = projectionmatrix * modelviewmatrix * vec4(tePosition, 1);
     tePosition = vec3(modelviewmatrix * vec4(tePosition, 1.0));

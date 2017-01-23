@@ -1,7 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+{
   qDebug() << "✓✓ MainWindow constructor";
   ui->setupUi(this);
   ui->toggle_wf_mode->setChecked(ui->MainDisplay->wireframeMode);
@@ -10,12 +11,104 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   ui->tessellationLevelSlider->setValue(ui->MainDisplay->tessellationLevel);
   ui->qasSubdivOffsetBox->setValue(ui->MainDisplay->qasSubdivOffset);
   ui->adaptiveTessellationBox->setChecked(ui->MainDisplay->adaptiveTessellation);
+  ui->normalCurvatureBox->setChecked(ui->MainDisplay->curvatureMode == 1);
+  ui->zoomTessSlider->setValue(ui->MainDisplay->zoomTess);
+  ui->curvTessSlider->setValue(ui->MainDisplay->curvTess);
+  ui->normTessSlider->setValue(ui->MainDisplay->normTess);
+  
+  // Start thread
+  QThread* thread = new QThread;
+  GUIUpdater* updater = new GUIUpdater(this);
+  updater->moveToThread(thread);
+  connect(updater, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+  connect(thread, SIGNAL(started()), updater, SLOT(process()));
+  connect(updater, SIGNAL(finished()), thread, SLOT(quit()));
+  connect(updater, SIGNAL(finished()), updater, SLOT(deleteLater()));
+  connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+  thread->start();
 }
 
 MainWindow::~MainWindow()
 {
     qDebug() << "✗✗ MainWindow destructor";
     delete ui;
+}
+
+void MainWindow::updateStats()
+{
+    ui->qasPolygonCountLabel->setText(QString::number(ui->MainDisplay->qasPolygonCountValue));
+    ui->loopPolygonCountLabel->setText(QString::number(ui->MainDisplay->loopPolygonCountValue));
+}
+
+void MainWindow::on_qasTessMinSlider_valueChanged(int value)
+{
+    ui->MainDisplay->tessMinValue = value;
+    ui->MainDisplay->update();
+}
+
+void MainWindow::on_qasTessMaxSlider_valueChanged(int value)
+{
+    ui->MainDisplay->tessMaxValue = value;
+    ui->MainDisplay->update();
+}
+
+void MainWindow::on_zoomTessSlider_valueChanged(double value)
+{
+    ui->MainDisplay->zoomTess = value;
+    ui->MainDisplay->update();
+}
+
+void MainWindow::on_curvTessSlider_valueChanged(double value)
+{
+    ui->MainDisplay->curvTess = value;
+    ui->MainDisplay->update();
+}
+
+void MainWindow::on_normTessSlider_valueChanged(double value)
+{
+    ui->MainDisplay->normTess = value;
+    ui->MainDisplay->update();
+}
+
+void MainWindow::on_normalCurvatureBox_toggled(bool checked)
+{
+    ui->MainDisplay->curvatureMode = checked ? 1 : 0;
+    ui->MainDisplay->update();
+}
+
+void MainWindow::on_backgroundBox_currentIndexChanged(int value)
+{
+    qDebug() << "Updating background color...";
+    if(value == 0)
+    {
+        ui->MainDisplay->backgroundColor[0] = ui->MainDisplay->BACKGROUND_TRANSPARENT[0];
+        ui->MainDisplay->backgroundColor[1] = ui->MainDisplay->BACKGROUND_TRANSPARENT[1];
+        ui->MainDisplay->backgroundColor[2] = ui->MainDisplay->BACKGROUND_TRANSPARENT[2];
+        ui->MainDisplay->backgroundColor[3] = ui->MainDisplay->BACKGROUND_TRANSPARENT[3];
+    }
+    else if(value == 1)
+    {
+        ui->MainDisplay->backgroundColor[0] = ui->MainDisplay->BACKGROUND_BLACK[0];
+        ui->MainDisplay->backgroundColor[1] = ui->MainDisplay->BACKGROUND_BLACK[1];
+        ui->MainDisplay->backgroundColor[2] = ui->MainDisplay->BACKGROUND_BLACK[2];
+        ui->MainDisplay->backgroundColor[3] = ui->MainDisplay->BACKGROUND_BLACK[3];
+    }
+    else if(value == 2)
+    {
+        ui->MainDisplay->backgroundColor[0] = ui->MainDisplay->BACKGROUND_DARK_GRAY[0];
+        ui->MainDisplay->backgroundColor[1] = ui->MainDisplay->BACKGROUND_DARK_GRAY[1];
+        ui->MainDisplay->backgroundColor[2] = ui->MainDisplay->BACKGROUND_DARK_GRAY[2];
+        ui->MainDisplay->backgroundColor[3] = ui->MainDisplay->BACKGROUND_DARK_GRAY[3];
+        //std::copy(ui->MainDisplay->BACKGROUND_DARK_GRAY, ui->MainDisplay->BACKGROUND_DARK_GRAY+4, ui->MainDisplay->backgroundColor);
+    }
+    else if(value == 3)
+    {
+        ui->MainDisplay->backgroundColor[0] = ui->MainDisplay->BACKGROUND_WHITE[0];
+        ui->MainDisplay->backgroundColor[1] = ui->MainDisplay->BACKGROUND_WHITE[1];
+        ui->MainDisplay->backgroundColor[2] = ui->MainDisplay->BACKGROUND_WHITE[2];
+        ui->MainDisplay->backgroundColor[3] = ui->MainDisplay->BACKGROUND_WHITE[3];
+    }
+    ui->MainDisplay->update();
 }
 
 void MainWindow::on_adaptiveTessellationBox_toggled(bool checked)

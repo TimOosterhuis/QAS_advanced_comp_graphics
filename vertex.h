@@ -18,6 +18,7 @@ public:
   unsigned int index;
   unsigned short sharpness;
   unsigned short flag = FLAG_NONE;
+  float gaussianCurvature;
 
   // Inline constructors
   Vertex() {
@@ -27,15 +28,17 @@ public:
     val = 0;
     index = 0;
     sharpness = 0;
+    gaussianCurvature = 0.0;
   }
 
-  Vertex(QVector3D vcoords, HalfEdge* vout, unsigned short vval, unsigned int vindex, float vsharpness = 0) {
+  Vertex(QVector3D vcoords, HalfEdge* vout, unsigned short vval, unsigned int vindex, float vsharpness = 0, float vgcurv = 0.0f) {
     //qDebug() << "QVector3D Vertex Constructor";
     coords = vcoords;
     out = vout;
     val = vval;
     index = vindex;
     sharpness = vsharpness;
+    gaussianCurvature = vgcurv;
   }
 };
 

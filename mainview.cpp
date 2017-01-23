@@ -8,17 +8,20 @@ MainView::MainView(QWidget *Parent) : QOpenGLWidget(Parent)
     qDebug() << "✓✓ MainView constructor";
     
     //initialize global parameters
-    viewMode = VIEW_MODE_LOOP_AND_QAS;
+    viewMode = VIEW_MODE_QAS;
     modelLoaded = false;
-    wireframeMode = true;
+    wireframeMode = false;
     tessellationLevel = 1;
+    curvatureMode = 0;
     
     rotAngle = 0.0;
-    FoV = 70.0;
+    FoV = 50.0;
     
     ref_line_size = 1;
     show_ref_lines = false;
     pointSelected = false;
+    
+    std::copy(BACKGROUND_TRANSPARENT, BACKGROUND_TRANSPARENT + 4, backgroundColor);
 }
 
 MainView::~MainView()
@@ -34,6 +37,8 @@ MainView::~MainView()
     glDeleteBuffers(1, &meshNormalsBO);
     glDeleteBuffers(1, &meshIndexBO);
     glDeleteVertexArrays(1, &meshVAO);
+    
+    glDeleteQueries(1, &pgQuery);
     
     debugLogger->stopLogging();
     
@@ -121,6 +126,12 @@ void MainView::initUniformLocationsQAS()
     uniformsQAS["show_reflines"] = qasShaderProg.uniformLocation("show_isophotes");
     uniformsQAS["refline_size"] = qasShaderProg.uniformLocation("isophote_size");
     uniformsQAS["adaptive_tessellation"] = qasShaderProg.uniformLocation("adaptive_tessellation");
+    uniformsQAS["curvature_mode"] = qasShaderProg.uniformLocation("curvature_mode");
+    uniformsQAS["zoom_tess"] = qasShaderProg.uniformLocation("zoom_tess");
+    uniformsQAS["curv_tess"] = qasShaderProg.uniformLocation("curv_tess");
+    uniformsQAS["norm_tess"] = qasShaderProg.uniformLocation("norm_tess");
+    uniformsQAS["tess_level_min"] = qasShaderProg.uniformLocation("tess_level_min");
+    uniformsQAS["tess_level_max"] = qasShaderProg.uniformLocation("tess_level_max");
 }
 
 void MainView::initUniformLocationsLoop()
@@ -152,7 +163,6 @@ void MainView::createBuffersQAS()
         }
         
         glGenBuffers(1, &vboQASIndices);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshIndexBO);
     }
     glBindVertexArray(0);
 }
@@ -177,7 +187,6 @@ void MainView::createBuffersLoop()
         }
         
         glGenBuffers(1, &meshIndexBO);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshIndexBO); -> why bind this?
     }
     glBindVertexArray(0);
 }
@@ -203,9 +212,6 @@ void MainView::updateVertexArrayObjectQAS()
     for (int k=0;k<currentMesh->Faces.size();++k)
     {
         currentMesh->setFaceNormal(&currentMesh->Faces[k]);
-        //qDebug() << "a face normal is this:";
-        //qDebug() << currentMesh->Faces[k].normal;
-
     }
 
     for (int k=0;k<currentMesh->Vertices.size();++k)
@@ -230,8 +236,6 @@ void MainView::updateVertexArrayObjectQAS()
           currentEdge = currentEdge->twin->next;
         }
         vertexNormalsQAS.append( vertexNormal );
-        //qDebug() << "a normal is this:";
-        //qDebug() << vertexNormal;
     }
 
     // Update indices
@@ -273,21 +277,11 @@ void MainView::updateVertexArrayObjectQAS()
          polyIndicesQAS.append(e1);
          polyIndicesQAS.append(p2);
          polyIndicesQAS.append(e2);
-         
-         /*for (unsigned int m=0; m<3; m++) {
-           //# This adds the points in the order v0, e0, v1, e1, v2, e2. So in the shader controlNet 0, 2, and 4 will be triangle corner points
-           //and 1, 3, 5 will be the 'halfway points' which correspond to the edge points
-           subdivEdgeIdx = 2 * currentEdge->index;
-           polyIndicesQAS.append(currentMesh->HalfEdges[subdivEdgeIdx].target->index);
-
-           subdivEdgeIdx = 2 * currentEdge->index + 1;
-           polyIndicesQAS.append(currentMesh->HalfEdges[subdivEdgeIdx].target->index);
-
-           currentEdge = currentEdge->next;
-         }*/
      }
 
     qDebug() << "Putting " << polyIndicesQAS.size() << " indices in buffer to draw...";
+    
+    
     
     glBindVertexArray(vaoQAS);
     {
@@ -466,6 +460,9 @@ void MainView::initializeGL()
     // Default is GL_LESS
     glDepthFunc(GL_LEQUAL);
     
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
     glPatchParameteri(GL_PATCH_VERTICES, 6); // triangles: 3, quads: 4, ...
     // For reference: max tessellation level: GL_MAX_TESS_GEN_LEVEL, we need this for tessellation level slider
     
@@ -480,6 +477,9 @@ void MainView::initializeGL()
     qDebug() << ".. initializing shader uniform-locations";
     initUniformLocationsLoop();
     initUniformLocationsQAS();
+    
+    qDebug() << ".. initializing shader queries";
+    glGenQueries(1, &pgQuery);
     
     qDebug() << ".. creating buffers";
     createBuffersLoop();
@@ -500,7 +500,7 @@ void MainView::resizeGL(int newWidth, int newHeight)
 void MainView::paintGL()
 {
     // Clean framebuffer
-    glClearColor(239/255.0f, 235/255.0f, 231/255.0f, 1.0);
+    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     if(modelLoaded)
@@ -530,6 +530,15 @@ void MainView::paintGL()
                     glUniform1i(uniformsQAS["refline_size"], ref_line_size);
                     
                     glUniform1i(uniformsQAS["adaptive_tessellation"], adaptiveTessellation ? 1 : 0);
+                    
+                    glUniform1i(uniformsQAS["curvature_mode"], curvatureMode);
+                    
+                    glUniform1f(uniformsQAS["zoom_tess"], zoomTess);
+                    glUniform1f(uniformsQAS["curv_tess"], curvTess);
+                    glUniform1f(uniformsQAS["norm_tess"], normTess);
+                    
+                    glUniform1f(uniformsQAS["tess_level_min"], tessMinValue);
+                    glUniform1f(uniformsQAS["tess_level_max"], tessMaxValue);
                 }
                 
                 // Render mesh
@@ -545,7 +554,13 @@ void MainView::paintGL()
                     // Draw mesh buffer
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboQASIndices);
                     {
+                        glBeginQuery(GL_PRIMITIVES_GENERATED, pgQuery);
                         glDrawElements(GL_PATCHES, vboQASIndicesCount, GL_UNSIGNED_INT, 0);
+                        glEndQuery(GL_PRIMITIVES_GENERATED);
+                        GLuint gen = -1;
+                        glGetQueryObjectuiv(pgQuery, GL_QUERY_RESULT, &gen);
+                        //qDebug() << "Triangles drawn: " << gen;
+                        qasPolygonCountValue = gen;
                     }
                     
                     // Draw the selected control point if it exists
@@ -589,7 +604,13 @@ void MainView::paintGL()
                     // Draw mesh buffer
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshIndexBO);
                     {
+                        glBeginQuery(GL_PRIMITIVES_GENERATED, pgQuery);
                         glDrawElements(GL_TRIANGLES, meshIBOSize, GL_UNSIGNED_INT, 0);
+                        glEndQuery(GL_PRIMITIVES_GENERATED);
+                        GLuint gen = -1;
+                        glGetQueryObjectuiv(pgQuery, GL_QUERY_RESULT, &gen);
+                        //qDebug() << "Triangles drawn: " << gen;
+                        loopPolygonCountValue = gen;
                     }
                     
                     // Draw the selected control point if it exists
@@ -649,72 +670,17 @@ void MainView::mousePressEvent(QMouseEvent* event)
     grabY = event->y();
     grabRotAngle = rotAngle;
     
-    
-    float xRatio, yRatio, xScene, yScene;
-    //x and y coordinates in window space
-    xRatio = (float)event->x() / width();
-    yRatio = (float)event->y() / height();
-    
-    // By default, the drawing canvas is the square [-1,1]^2:
-    xScene = (1-xRatio)*-1 + xRatio*1;
-    // Note that the origin of the canvas is in the top left corner (not the lower left).
-    yScene = yRatio*-1 + (1-yRatio)*1;
-    //ray direction in clipping space
-    QVector4D ray_clip = QVector4D(xScene, yScene, -1.0, 1.0);
-    //multiply by the inverted projection matrix to get the x and y direction in camera space
-    QVector4D ray_eye = projectionMatrix.inverted() * ray_clip;
-    //manually set the z direction and w coordinate to create a ray direction vector camera space
-    ray_eye.setZ(-1.0);
-    ray_eye.setW(0.0);
-    //multiply by the inverted modelview matrix and normalize to get the unit ray direction vector
-    //in world/object space
-    QVector4D ray_world = modelViewMatrix.inverted() * ray_eye;
-    ray_world = ray_world.normalized();
-    
-    //ray trace and rerender if a ray intersects a mesh vertex
-    rayTrace(ray_world);
     update();
-
 }
 
-void MainView::rayTrace(QVector4D ray) {
-    float min_dist = 1;
-    //calculate the ray origin (camera position) in world/object space
-    QVector4D camera_pos = modelViewMatrix.inverted() * QVector4D(0.0,0.0,0.0,1.0);
-    //cast a ray for every vertex
-    for (int k = 0; k < vertexCoordsLoop.size(); k++) {
-        //solve the equation between the ray and the plane obtained by the vertex coordinates and it's normalvector
-        QVector4D V0 = QVector4D(vertexCoordsLoop[k], 1.0) - camera_pos;
-        float dotV0Normal = V0.x() * vertexNormalsLoop[k].x() + V0.y() * vertexNormalsLoop[k].y() + V0.z() * vertexNormalsLoop[k].z();
-        float dotRayNormal = ray.x() * vertexNormalsLoop[k].x() + ray.y() * vertexNormalsLoop[k].y() + ray.z() * vertexNormalsLoop[k].z();
-        float t = dotV0Normal/dotRayNormal;
-
-        QVector4D intersect = camera_pos + (t * ray);
-
-        //calculate the distance between the ray plane intersection point vertex
-        float dist = (QVector4D(vertexCoordsLoop[k], 1.0) - intersect).length();
-
-        //future TO DO: somehow incorporate the angle between the ray and the vertex plane in this distance measurement
-        //(as of now the selection area (in screen space) is slightly larger for some vertexes than others, because the same distance
-        //away from the vertex in screen space will result in a relatively larger increase of the distance of the ray plane intersection point
-        //from the vertex point the more parallel the vertex plane is to the ray)
-
-        //the index of the point with the closest ray intersection through it's plane is saved globally for later rendering
-        if (dist < min_dist) {
-            selectedPoint = k;
-            min_dist = dist;
-        }
-    }
-    //If the mininum intersection distance is 'close' enough, consider the vertex selected.
-    pointSelected = min_dist < 0.2;
-}
-
-void MainView::wheelEvent(QWheelEvent* event) {
+void MainView::wheelEvent(QWheelEvent* event)
+{
   FoV -= event->delta() / 60.0;
   updateMatrices();
 }
 
-void MainView::keyPressEvent(QKeyEvent* event) {
+void MainView::keyPressEvent(QKeyEvent* event)
+{
   switch(event->key()) {
   case 'Z':
     wireframeMode = !wireframeMode;
@@ -725,6 +691,7 @@ void MainView::keyPressEvent(QKeyEvent* event) {
 
 // ---
 
-void MainView::onMessageLogged( QOpenGLDebugMessage Message ) {
+void MainView::onMessageLogged( QOpenGLDebugMessage Message )
+{
   qDebug() << " → Log:" << Message;
 }

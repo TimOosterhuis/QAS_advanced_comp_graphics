@@ -124,6 +124,60 @@ Mesh::~Mesh() {
   Faces.squeeze();
 }
 
+/*
+ * Computes Guassian curvatures at every Vertex.
+ */
+void Mesh::computeGaussianCurvatures(bool override)
+{
+    // don't compute gaussian curvature again, unless override (because there was a change in the Mesh vertices)
+    if(gaussianCurvatureComputed && !override)
+    {
+        return;
+    }
+    
+    // For every Vertex in the Mesh
+    for(int i=0;i<Vertices.size();++i)
+    {
+        Vertex* v = &(Vertices[i]);
+        QVector3D vp = v->coords;
+        float totalAngle = 0.0f;
+        float totalArea = 0.0f;
+
+        // Find all first degree siblings of this Vertex
+        HalfEdge* edge = v->out;
+        do
+        {
+            // Take a sibling
+            Vertex* s1 = edge->target;
+
+            // Go to next sibling
+            edge = edge->twin->next;
+
+            // Take another sibling
+            Vertex* s2 = edge->target;
+
+            // Calculate cross and dot products
+            QVector3D v_s1 = vp - s1->coords;
+            QVector3D v_s2 = vp - s2->coords;
+            QVector3D cross = QVector3D::crossProduct(v_s1, v_s2);
+            v_s1.normalize();
+            v_s2.normalize();
+
+            // Add angle between two siblings from Vertex v
+            totalAngle += acos(QVector3D::dotProduct(v_s1, v_s2));
+
+            // Add area of the triangle {v, s1, s2}
+            totalArea += cross.length() / 2.0f;
+        }
+        while(edge != v->out);
+
+        // Calculate Gaussian curvature for this Vertex v
+        v->gaussianCurvature = 4.0f * (2.0f * M_PI - totalAngle) / totalArea;
+    }
+    
+    gaussianCurvatureComputed = true;
+}
+
 void Mesh::setTwins(unsigned int numHalfEdges, unsigned int indexH) {
 
   unsigned int m, n;
